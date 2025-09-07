@@ -5,21 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ultimate Piano Learning App</title>
 <style>
-/* ======================== General Styles ======================== */
 body{margin:0;font-family:'Arial',sans-serif;background:#f0f0f0;color:#111;transition:background .3s,color .3s}
 .dark{background:#1e1e1e;color:white}
 header{display:flex;justify-content:space-between;align-items:center;padding:1rem;background:#333;color:white;box-shadow:0 4px 10px rgba(0,0,0,.2)}
 header h1{margin:0;font-size:1.5rem}
 #theme-toggle{cursor:pointer;padding:.5rem 1rem;background:#555;border:none;color:white;border-radius:5px;transition:background .3s}
 #theme-toggle:hover{background:#777}
-main{padding:1rem;display:grid;grid-template-columns:1fr;gap:1rem}
-@media(min-width:900px){main{grid-template-columns:1fr 1fr;}}
-.card{background:white;padding:1rem;border-radius:15px;box-shadow:0 4px 10px rgba(0,0,0,.2);transition:transform .3s;}
-.dark .card{background:#2a2a2a;}
-.card:hover{transform:translateY(-3px);}
-button{padding:.5rem 1rem;border:none;border-radius:5px;cursor:pointer;transition:background .3s}
+.page{display:none;padding:1rem;}
+.page.active{display:block;}
+button{padding:.5rem 1rem;border:none;border-radius:5px;cursor:pointer;transition:background .3s;margin-top:.5rem}
 button:hover{background:#ddd}
-/* ======================== Piano Styles ======================== */
 #piano{display:flex;overflow-x:auto;user-select:none;margin-top:1rem;padding-bottom:1rem}
 .white{width:40px;height:160px;border:1px solid black;background:white;margin-right:-1px;position:relative;display:flex;justify-content:center;align-items:flex-end;font-size:10px;cursor:pointer;border-radius:5px;transition:background .3s}
 .white.highlight{background:yellow}
@@ -29,15 +24,15 @@ button:hover{background:#ddd}
 .black.highlight{background:gold}
 .black.correct{background:green;color:white}
 .black.wrong{background:red;color:white}
-/* ======================== Progress & Cards ======================== */
 #progress-container{height:20px;background:#ccc;border-radius:10px;overflow:hidden;margin-top:.5rem}
 #progress{height:100%;width:0%;background:green;transition:width .3s}
-#lesson-area,#song-area{display:none;flex-direction:column;gap:.5rem}
-#song-list{display:flex;flex-wrap:wrap;gap:.5rem;max-height:200px;overflow-y:auto}
-.song-card{padding:.5rem 1rem;border-radius:10px;background:#eee;cursor:pointer;flex:1 1 calc(50% - 10px);transition:transform .2s,background .2s}
-.dark .song-card{background:#444;color:white}
-.song-card:hover{transform:scale(1.05);background:#ddd}
-.dark .song-card:hover{background:#555}
+#song-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);display:none;justify-content:center;align-items:center;z-index:10}
+#song-content{background:white;padding:1rem;border-radius:10px;max-width:600px;width:90%;max-height:80%;overflow-y:auto}
+.dark #song-content{background:#2a2a2a;color:white}
+#song-list div{padding:.5rem 1rem;border-radius:5px;background:#eee;margin:.2rem 0;cursor:pointer}
+.dark #song-list div{background:#444;color:white}
+#song-list div:hover{background:#ddd}
+.dark #song-list div:hover{background:#555}
 </style>
 </head>
 <body>
@@ -45,49 +40,88 @@ button:hover{background:#ddd}
 <h1>Ultimate Piano Learning App</h1>
 <button id="theme-toggle">Toggle Theme</button>
 </header>
-<main>
-<div id="calibration-card" class="card">
+
+<!-- Landing Page -->
+<div id="landing" class="page active">
+<h2>Welcome!</h2>
+<p>Select your piano keyboard size:</p>
+<label for="numKeys">Number of Keys (e.g., 61, 76, 88):</label>
+<input type="number" id="numKeys" value="88" min="25" max="88">
+<button id="start-calibration-btn">Start Calibration</button>
+</div>
+
+<!-- Calibration Page -->
+<div id="calibration-page" class="page">
 <h2>Calibration</h2>
-<p id="calibration-instruction">Press the highlighted key on your piano to begin calibration.</p>
+<p id="calibration-instruction">Enable microphone and play your piano keys one by one.</p>
 <div id="piano"></div>
 <div id="progress-container"><div id="progress"></div></div>
 </div>
 
-<div id="lesson-card" class="card">
+<!-- Lessons Page -->
+<div id="lessons-page" class="page">
 <h2>Lessons</h2>
 <div id="lesson-area">
 <p id="lesson-instruction"></p>
 <button id="next-lesson">Next Note</button>
 </div>
-<button id="start-lessons">Start Lessons</button>
 </div>
 
-<div id="song-card" class="card">
+<!-- Song Page -->
+<div id="song-page" class="page">
 <h2>Song Library</h2>
-<div id="song-area">
-<input type="text" id="song-search" placeholder="Search songs">
+<input type="text" id="song-search" placeholder="Search a song">
 <div id="song-list"></div>
 </div>
-<button id="start-songs">Show Songs</button>
+
+<!-- Song Modal -->
+<div id="song-modal">
+<div id="song-content">
+<h3 id="song-title"></h3>
+<p id="song-chords"></p>
+<button id="close-song">Close</button>
 </div>
-</main>
+</div>
 
 <script>
-// ======================== Piano Notes & Variables ========================
-const NOTES=[
-'A0','A#0','B0','C1','C#1','D1','D#1','E1','F1','F#1','G1','G#1',
-'A1','A#1','B1','C2','C#2','D2','D#2','E2','F2','F#2','G2','G#2',
-'A2','A#2','B2','C3','C#3','D3','D#3','E3','F3','F#3','G3','G#3',
-'A3','A#3','B3','C4','C#4','D4','D#4','E4','F4','F#4','G4','G#4',
-'A4','A#4','B4','C5','C#5','D5','D#5','E5','F5','F#5','G5','G#5',
-'A5','A#5','B5','C6','C#6','D6','D#6','E6','F6','F#6','G6','G#6',
-'A6','A#6','B6','C7','C#7','D7','D#7','E7','F7','F#7','G7','G#7',
-'A7','A#7','B7','C8'
-];
-let currentCalibrationIndex=0, calibratedNotes=[], lessonIndex=0, theme='light';
+// ======================== Theme Toggle ========================
+document.getElementById('theme-toggle').onclick=()=>{
+  document.body.classList.toggle('dark');
+};
 
-// ======================== Build Piano ========================
-const pianoContainer=document.getElementById('piano');
+// ======================== Pages ========================
+const landing=document.getElementById('landing');
+const calibrationPage=document.getElementById('calibration-page');
+const lessonsPage=document.getElementById('lessons-page');
+const songPage=document.getElementById('song-page');
+
+document.getElementById('start-calibration-btn').onclick=()=>{
+  landing.classList.remove('active');
+  calibrationPage.classList.add('active');
+  startCalibration();
+};
+
+// ======================== Piano Variables ========================
+let NOTES=[], pianoContainer=document.getElementById('piano'), numKeys=88;
+let currentCalibrationIndex=0, calibratedNotes=[];
+let audioContext=null, analyser=null, dataArray=null, source=null;
+let lessonIndex=0;
+
+// Generate NOTE array based on number of keys
+function generateNotes(n){
+  const allNotes=['A','A#','B','C','C#','D','D#','E','F','F#','G','G#'];
+  let notes=[];
+  let octave=0;
+  let i=0;
+  while(notes.length<n){
+    notes.push(allNotes[i%12]+octave);
+    i++;
+    if(allNotes[i%12]=='B') octave++;
+  }
+  return notes;
+}
+
+// ======================== Build Piano Keys ========================
 function createPiano(){
   pianoContainer.innerHTML='';
   NOTES.forEach(note=>{
@@ -98,9 +132,8 @@ function createPiano(){
     pianoContainer.appendChild(key);
   });
 }
-createPiano();
 
-// ======================== Highlight Keys ========================
+// ======================== Highlight Key ========================
 function highlightKey(index){
   const keys=pianoContainer.querySelectorAll('.white,.black');
   keys.forEach(k=>k.classList.remove('highlight','correct','wrong'));
@@ -110,55 +143,13 @@ function highlightKey(index){
     document.getElementById('progress').style.width=((index)/NOTES.length*100)+'%';
   }
 }
-highlightKey(currentCalibrationIndex);
 
-// ======================== Theme Toggle ========================
-document.getElementById('theme-toggle').onclick=()=>{
-  document.body.classList.toggle('dark');
-  theme=theme==='light'?'dark':'light';
-};
-
-// ======================== Lessons ========================
-const lessons=[
-{title:'Lesson 1',notes:['C4','D4','E4','F4']},{title:'Lesson 2',notes:['E4','F4','G4','A4']},
-{title:'Lesson 3',notes:['C4','E4','G4']},{title:'Lesson 4',notes:['C4','D4','E4','F4','G4']},
-{title:'Lesson 5',notes:['G4','F4','E4','D4','C4']},{title:'Lesson 6',notes:['C3','E3','G3']},
-{title:'Lesson 7',notes:['A3','C4','E4']},{title:'Lesson 8',notes:['F3','A3','C4']},
-{title:'Lesson 9',notes:['D3','F3','A3']},{title:'Lesson10',notes:['G3','B3','D4']},
-{title:'Lesson11',notes:['C4','F4','G4']},{title:'Lesson12',notes:['D4','G4','A4']},
-{title:'Lesson13',notes:['E4','A4','B4']},{title:'Lesson14',notes:['F4','B4','C5']},
-{title:'Lesson15',notes:['G4','C5','D5']},{title:'Lesson16',notes:['A4','D5','E5']},
-{title:'Lesson17',notes:['B4','E5','F5']},{title:'Lesson18',notes:['C5','F5','G5']},
-{title:'Lesson19',notes:['D5','G5','A5']},{title:'Lesson20',notes:['E5','A5','B5']}
-];
-document.getElementById('start-lessons').onclick=()=>{document.getElementById('lesson-area').style.display='flex';showLesson(0);}
-function showLesson(idx){lessonIndex=0;document.getElementById('lesson-instruction').textContent=`${lessons[idx].title}: Play ${lessons[idx].notes[lessonIndex]}`;}
-document.getElementById('next-lesson').onclick=()=>{
-  const lesson=lessons[0]; // For simplicity, start with lesson 0
-  lessonIndex++;
-  if(lessonIndex<lesson.notes.length){document.getElementById('lesson-instruction').textContent=`Play: ${lesson.notes[lessonIndex]}`;}
-  else{alert('Lesson complete!');}
-};
-
-// ======================== Song Library ========================
-const songs=[
-{name:'Twinkle',notes:['C4','C4','G4','G4','A4','A4','G4']},
-{name:'MaryHadALittleLamb',notes:['E4','D4','C4','D4','E4','E4','E4']},
-{name:'OdeToJoy',notes:['E4','E4','F4','G4','G4','F4','E4','D4']}
-];
-document.getElementById('start-songs').onclick=()=>{document.getElementById('song-area').style.display='flex';renderSongs();}
-function renderSongs(){
-  const container=document.getElementById('song-list'); container.innerHTML='';
-  songs.forEach(song=>{
-    const div=document.createElement('div'); div.className='song-card'; div.textContent=song.name;
-    div.onclick=()=>{alert(`Play song: ${song.name}`)};
-    container.appendChild(div);
-  });
-}
-
-// ======================== Microphone & Pitch Detection ========================
-let audioContext=null,analyser=null,dataArray=null,source=null;
-async function initMic(){
+// ======================== Calibration ========================
+async function startCalibration(){
+  numKeys=parseInt(document.getElementById('numKeys').value)||88;
+  NOTES=generateNotes(numKeys);
+  createPiano();
+  highlightKey(currentCalibrationIndex);
   try{
     const stream=await navigator.mediaDevices.getUserMedia({audio:true});
     audioContext=new AudioContext();
@@ -168,21 +159,22 @@ async function initMic(){
     analyser.fftSize=2048;
     dataArray=new Float32Array(analyser.frequencyBinCount);
     detectPitchLoop();
-  }catch(err){alert("Microphone access required!");}
+  }catch(err){alert('Microphone access required!');}
 }
+
+// ======================== Pitch Detection ========================
 function detectPitchLoop(){
   analyser.getFloatTimeDomainData(dataArray);
   let freq=autoCorrelate(dataArray,audioContext.sampleRate);
   if(freq && currentCalibrationIndex<NOTES.length){
     const note=frequencyToNote(freq);
-    const currentNote=NOTES[currentCalibrationIndex];
-    if(note===currentNote){
+    if(note===NOTES[currentCalibrationIndex]){
       calibratedNotes.push(note);
       const keys=pianoContainer.querySelectorAll('.white,.black');
       keys[currentCalibrationIndex].classList.add('correct');
       currentCalibrationIndex++;
       if(currentCalibrationIndex<NOTES.length) highlightKey(currentCalibrationIndex);
-      else alert('Calibration complete!');
+      else {alert('Calibration complete!');startLessons();}
     }
   }
   requestAnimationFrame(detectPitchLoop);
@@ -190,19 +182,62 @@ function detectPitchLoop(){
 function frequencyToNote(freq){
   const A4=440;
   const noteNum=12*(Math.log2(freq/A4))+69;
-  return NOTES[Math.round(noteNum)]||null;
+  const rounded=Math.round(noteNum);
+  return NOTES[rounded]||null;
 }
 function autoCorrelate(buf,sampleRate){
   let SIZE=buf.length,rms=0;
-  for(let i=0;i<SIZE;i++)rms+=buf[i]*buf[i];
+  for(let i=0;i<SIZE;i++) rms+=buf[i]*buf[i];
   rms=Math.sqrt(rms/SIZE);
   if(rms<0.01) return null;
-  let r=[];for(let i=0;i<SIZE;i++){r[i]=0;for(let j=0;j<SIZE-i;j++){r[i]+=buf[j]*buf[j+i];}}
-  let d=0;while(r[d]>r[d+1])d++;
-  let maxval=-1,maxpos=-1;for(let i=d;i<SIZE;i++){if(r[i]>maxval){maxval=r[i];maxpos=i;}}
+  let r=[]; for(let i=0;i<SIZE;i++){r[i]=0; for(let j=0;j<SIZE-i;j++) r[i]+=buf[j]*buf[j+i];}
+  let d=0; while(r[d]>r[d+1]) d++;
+  let maxval=-1,maxpos=-1; for(let i=d;i<SIZE;i++){if(r[i]>maxval){maxval=r[i];maxpos=i;}} 
   return sampleRate/maxpos;
 }
-initMic();
+
+// ======================== Lessons ========================
+function startLessons(){
+  calibrationPage.classList.remove('active');
+  lessonsPage.classList.add('active');
+  lessonIndex=0;
+  showLesson(0);
+}
+const lessons=[
+{title:'Lesson 1',notes:['C4','D4','E4','F4']},
+{title:'Lesson 2',notes:['E4','F4','G4','A4']},
+{title:'Lesson 3',notes:['C4','E4','G4']}
+];
+function showLesson(idx){
+  lessonIndex=0;
+  document.getElementById('lesson-instruction').textContent=`${lessons[idx].title}: Play ${lessons[idx].notes[lessonIndex]}`;
+}
+document.getElementById('next-lesson').onclick=()=>{
+  const lesson=lessons[0];
+  lessonIndex++;
+  if(lessonIndex<lesson.notes.length) document.getElementById('lesson-instruction').textContent=`Play: ${lesson.notes[lessonIndex]}`;
+  else alert('Lesson complete!');
+}
+
+// ======================== Songs ========================
+const songPageBtn=document.getElementById('song-page-btn');
+const songList=document.getElementById('song-list');
+document.getElementById('song-search').oninput=()=>{
+  const val=document.getElementById('song-search').value.toLowerCase();
+  songList.innerHTML='';
+  if(!val) return;
+  // Placeholder search: in real app, call API for chords
+  const chords='C G Am F';
+  const div=document.createElement('div');
+  div.textContent=val;
+  div.onclick=()=>{
+    document.getElementById('song-modal').style.display='flex';
+    document.getElementById('song-title').textContent=val;
+    document.getElementById('song-chords').textContent='Chords: '+chords;
+  };
+  songList.appendChild(div);
+};
+document.getElementById('close-song').onclick=()=>{document.getElementById('song-modal').style.display='none';};
 </script>
 </body>
 </html>
