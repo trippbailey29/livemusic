@@ -3,143 +3,187 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ultimate Piano Learner</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<title>Piano Learning App</title>
 <style>
-body { margin:0; padding:0; font-family:sans-serif; }
-.key { border:1px solid #333; width:30px; height:120px; display:inline-flex; align-items:flex-end; justify-content:center; margin:1px; user-select:none; cursor:pointer; position:relative; }
-.white { background:white; z-index:1; }
-.black { background:black; height:80px; width:20px; left:-10px; z-index:10; color:white; position:relative; }
-.highlight-expected { background:yellow !important; }
-.highlight-detected { background:red !important; }
-#progress-bar { width:100%; height:20px; background:#ccc; border-radius:10px; overflow:hidden; margin-bottom:10px; }
-#progress-inner { height:100%; width:0%; background:#4ade80; }
+  body { font-family: 'Arial', sans-serif; margin:0; background:#f0f0f0; }
+  .dark { background:#1e1e1e; color:white; }
+  header { display:flex; justify-content:space-between; align-items:center; padding:1rem; background:#333; color:white; }
+  header h1 { margin:0; font-size:1.5rem; }
+  #theme-toggle { cursor:pointer; padding:.5rem 1rem; background:#555; border:none; color:white; border-radius:5px; }
+  main { padding:1rem; display:flex; flex-direction:column; gap:1rem; }
+  .card { background:white; padding:1rem; border-radius:10px; box-shadow:0 4px 6px rgba(0,0,0,0.1); }
+  .dark .card { background:#2a2a2a; }
+  #piano { display:flex; overflow-x:auto; user-select:none; margin-top:1rem; }
+  .white { width:40px; height:150px; border:1px solid black; background:white; position:relative; margin-right:-1px; z-index:1; display:flex; justify-content:center; align-items:flex-end; font-size:10px; cursor:pointer; }
+  .white.highlight { background:yellow; }
+  .white.correct { background:green; color:white; }
+  .white.wrong { background:red; color:white; }
+  .black { width:25px; height:100px; background:black; position:relative; margin-right:-12px; z-index:2; display:flex; justify-content:center; align-items:flex-end; font-size:9px; color:white; cursor:pointer; }
+  #progress-container { height:20px; background:#ccc; border-radius:10px; overflow:hidden; margin-top:.5rem; }
+  #progress { height:100%; width:0%; background:green; transition:width .3s; }
+  #lesson-area, #song-area { display:none; flex-direction:column; gap:.5rem; }
+  button { padding:.5rem 1rem; border:none; border-radius:5px; cursor:pointer; }
 </style>
 </head>
-<body class="bg-gray-100">
+<body>
+<header>
+  <h1>Piano Learning App</h1>
+  <button id="theme-toggle">Toggle Theme</button>
+</header>
+<main>
+  <div id="calibration-card" class="card">
+    <h2>Calibration</h2>
+    <p id="calibration-instruction">Press the highlighted key on your piano.</p>
+    <div id="piano"></div>
+    <div id="progress-container"><div id="progress"></div></div>
+    <button id="next-key">Continue</button>
+  </div>
 
-<header class="bg-blue-600 text-white p-4 text-center text-2xl font-bold">Ultimate Piano Learner</header>
+  <div id="lesson-card" class="card">
+    <h2>Lessons</h2>
+    <div id="lesson-area">
+      <p id="lesson-instruction"></p>
+      <button id="next-lesson">Next Note</button>
+    </div>
+    <button id="start-lessons">Start Lessons</button>
+  </div>
 
-<main class="p-4 max-w-6xl mx-auto">
-
-<section id="home-page">
-<h2 class="text-xl font-semibold mb-4">Welcome</h2>
-<p class="mb-4">Select a track:</p>
-<div class="flex space-x-4 mb-4">
-<button id="hands-on-btn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Hands-On Track</button>
-<button id="mixed-btn" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Mixed Track</button>
-</div>
-<div class="flex flex-col space-y-2">
-<button id="calibrate-btn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Calibrate Piano</button>
-<button id="lessons-btn" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 disabled:opacity-50" disabled>Lessons</button>
-<button id="songs-btn" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 disabled:opacity-50" disabled>Song Library</button>
-</div>
-</section>
-
-<section id="calibration-page" class="hidden">
-<h2 class="text-xl font-semibold mb-4">Calibration</h2>
-<div id="progress-bar"><div id="progress-inner"></div></div>
-<p id="calibration-instruction" class="mb-4">Loading...</p>
-<button id="continue-calibration" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Continue</button>
-</section>
-
-<section id="lessons-page" class="hidden">
-<h2 class="text-xl font-semibold mb-4">Lessons</h2>
-<div id="lesson-content" class="mb-4"></div>
-<div id="lesson-progress-bar" class="w-full h-4 bg-gray-300 rounded overflow-hidden mb-2"><div id="lesson-progress-inner" class="h-4 bg-green-400 w-0"></div></div>
-<button id="next-lesson" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Next Lesson</button>
-</section>
-
-<section id="songs-page" class="hidden">
-<h2 class="text-xl font-semibold mb-4">Song Library</h2>
-<div id="song-list" class="space-y-2 mb-4"></div>
-<div id="song-playback" class="mb-4"></div>
-</section>
-
-<section id="piano-section" class="mt-8">
-<div id="piano" class="flex space-x-0 select-none"></div>
-</section>
-
+  <div id="song-card" class="card">
+    <h2>Song Library</h2>
+    <div id="song-area">
+      <input type="text" id="song-search" placeholder="Search songs">
+      <div id="song-list"></div>
+    </div>
+    <button id="start-songs">Show Songs</button>
+  </div>
 </main>
 
-<footer class="bg-gray-200 text-center p-2 fixed bottom-0 w-full">
-<button id="recalibrate-btn" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Recalibrate</button>
-<button id="theme-toggle" class="bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-800 ml-2">Toggle Dark/Light</button>
-</footer>
-
 <script>
-// ----------------- Globals -----------------
-let track=null, calibrationData=[], currentKeyIndex=0, keyboardMap=[], lessonIndex=0;
-let lessons=[], songs=[];
-let audioContext, analyser, mediaStreamSource, dataArray, rafId;
-let currentExpectedNotes=[], currentNoteIndex=0;
-let theme='light';
+// ----------- Piano Keys -----------
+const NOTES = [
+'A0','A#0','B0','C1','C#1','D1','D#1','E1','F1','F#1','G1','G#1','G#1',
+'C2','C#2','D2','D#2','E2','F2','F#2','G2','G#2',
+'C3','C#3','D3','D#3','E3','F3','F#3','G3','G#3',
+'C4','C#4','D4','D#4','E4','F4','F#4','G4','G#4',
+'C5','C#5','D5','D#5','E5','F5','F#5','G5','G#5',
+'C6','C#6','D6','D#6','E6','F6','F#6','G6','G#6',
+'C7','C#7','D7','D#7','E7','F7','F#7','G7','G#7',
+'C8'
+];
+let currentCalibrationIndex = 0;
+let calibratedNotes = [];
+let lessonIndex = 0;
+let theme = 'light';
 
-// 88 key frequencies
-const noteFrequencies=[
-{note:"A0",freq:27.5},{note:"A#0",freq:29.135},{note:"B0",freq:30.868},
-{note:"C1",freq:32.703},{note:"C#1",freq:34.648},{note:"D1",freq:36.708},{note:"D#1",freq:38.891},{note:"E1",freq:41.203},{note:"F1",freq:43.654},{note:"F#1",freq:46.249},{note:"G1",freq:48.999},{note:"G#1",freq:51.913},{note:"A1",freq:55},{note:"A#1",freq:58.27},{note:"B1",freq:61.735},
-{note:"C2",freq:65.406},{note:"C#2",freq:69.296},{note:"D2",freq:73.416},{note:"D#2",freq:77.782},{note:"E2",freq:82.407},{note:"F2",freq:87.307},{note:"F#2",freq:92.499},{note:"G2",freq:97.999},{note:"G#2",freq:103.826},{note:"A2",freq:110},{note:"A#2",freq:116.541},{note:"B2",freq:123.471},
-{note:"C3",freq:130.813},{note:"C#3",freq:138.591},{note:"D3",freq:146.832},{note:"D#3",freq:155.563},{note:"E3",freq:164.814},{note:"F3",freq:174.614},{note:"F#3",freq:184.997},{note:"G3",freq:195.998},{note:"G#3",freq:207.652},{note:"A3",freq:220},{note:"A#3",freq:233.082},{note:"B3",freq:246.942},
-{note:"C4",freq:261.626},{note:"C#4",freq:277.183},{note:"D4",freq:293.665},{note:"D#4",freq:311.127},{note:"E4",freq:329.628},{note:"F4",freq:349.228},{note:"F#4",freq:369.994},{note:"G4",freq:391.995},{note:"G#4",freq:415.305},{note:"A4",freq:440},{note:"A#4",freq:466.164},{note:"B4",freq:493.883},
-{note:"C5",freq:523.251},{note:"C#5",freq:554.365},{note:"D5",freq:587.33},{note:"D#5",freq:622.254},{note:"E5",freq:659.255},{note:"F5",freq:698.456},{note:"F#5",freq:739.989},{note:"G5",freq:783.991},{note:"G#5",freq:830.609},{note:"A5",freq:880},{note:"A#5",freq:932.328},{note:"B5",freq:987.767},
-{note:"C6",freq:1046.502},{note:"C#6",freq:1108.731},{note:"D6",freq:1174.659},{note:"D#6",freq:1244.508},{note:"E6",freq:1318.51},{note:"F6",freq:1396.913},{note:"F#6",freq:1479.978},{note:"G6",freq:1567.982},{note:"G#6",freq:1661.219},{note:"A6",freq:1760},{note:"A#6",freq:1864.655},{note:"B6",freq:1975.533},
-{note:"C7",freq:2093.005},{note:"C#7",freq:2217.461},{note:"D7",freq:2349.318},{note:"D#7",freq:2489.016},{note:"E7",freq:2637.021},{note:"F7",freq:2793.826},{note:"F#7",freq:2959.955},{note:"G7",freq:3135.963},{note:"G#7",freq:3322.438},{note:"A7",freq:3520},{note:"A#7",freq:3729.31},{note:"B7",freq:3951.066},
-{note:"C8",freq:4186.009}];
+// ----------- Build Piano Visual -----------
+const pianoContainer = document.getElementById('piano');
+function createPiano() {
+  pianoContainer.innerHTML='';
+  NOTES.forEach((note,i)=>{
+    const isBlack = note.includes('#');
+    const key = document.createElement('div');
+    key.className = isBlack?'black':'white';
+    key.textContent = note;
+    key.dataset.note = note;
+    pianoContainer.appendChild(key);
+  });
+}
+createPiano();
 
-// ----------------- Lessons & Songs -----------------
-lessons=[];
-for(let t of ["hands-on","mixed"]){
-  for(let i=1;i<=20;i++){
-    lessons.push({track:t,title:`Lesson ${i}`,description:`Step-by-step notes for Lesson ${i}.`,expectedNotes:generateLessonNotes(i)});
+// ----------- Highlight Key for Calibration -----------
+function highlightKey(index) {
+  const keys = pianoContainer.querySelectorAll('.white, .black');
+  keys.forEach(k=>k.classList.remove('highlight','correct','wrong'));
+  if(index<keys.length){
+    keys[index].classList.add('highlight');
+    document.getElementById('calibration-instruction').textContent = `Play: ${NOTES[index]}`;
+    const progressPercent = ((index)/NOTES.length)*100;
+    document.getElementById('progress').style.width = progressPercent+'%';
   }
 }
-function generateLessonNotes(i){ let notes=[]; let start=60+i-1; for(let j=0;j<Math.min(7,88);j++){ notes.push(noteFrequencies[start+j].note);} return notes;}
+highlightKey(currentCalibrationIndex);
 
-songs=[
-{title:"Twinkle Twinkle",artist:"Traditional",notes:["C4","C4","G4","G4","A4","A4","G4"]},
-{title:"Mary Had a Little Lamb",artist:"Traditional",notes:["E4","D4","C4","D4","E4","E4","E4"]},
-{title:"Ode to Joy",artist:"Beethoven",notes:["E4","E4","F4","G4","G4","F4","E4","D4"]}
+// ----------- Mock Pitch Detection (replace with real mic logic) -----------
+function detectPitchMock() {
+  // Random correct or wrong for demo
+  return NOTES[currentCalibrationIndex]; // for demo, always correct
+}
+
+// ----------- Calibration Logic -----------
+document.getElementById('next-key').onclick = ()=>{
+  const detected = detectPitchMock();
+  const keys = pianoContainer.querySelectorAll('.white, .black');
+  const currentKey = keys[currentCalibrationIndex];
+  if(detected===NOTES[currentCalibrationIndex]){
+    currentKey.classList.add('correct');
+    calibratedNotes.push(detected);
+    currentCalibrationIndex++;
+    if(currentCalibrationIndex<NOTES.length){
+      highlightKey(currentCalibrationIndex);
+    } else {
+      alert('Calibration complete!');
+      document.getElementById('calibration-card').style.display='none';
+    }
+  } else {
+    currentKey.classList.add('wrong');
+    alert('Wrong note, try again.');
+  }
+};
+
+// ----------- Theme Toggle -----------
+document.getElementById('theme-toggle').onclick = ()=>{
+  document.body.classList.toggle('dark');
+  theme = theme==='light'?'dark':'light';
+};
+
+// ----------- Lessons Setup -----------
+const lessons = [
+{title:'Lesson 1', notes:['C4','D4','E4','F4']},
+{title:'Lesson 2', notes:['E4','F4','G4','A4']},
+{title:'Lesson 3', notes:['C4','E4','G4']}
+// ... add up to 20 lessons
 ];
+document.getElementById('start-lessons').onclick = ()=>{
+  document.getElementById('lesson-area').style.display='flex';
+  showLesson(0);
+};
+function showLesson(idx){
+  lessonIndex=0;
+  document.getElementById('lesson-instruction').textContent = `${lessons[idx].title}: Play ${lessons[idx].notes[lessonIndex]}`;
+}
+document.getElementById('next-lesson').onclick = ()=>{
+  const lesson = lessons[0]; // For demo, using first lesson
+  lessonIndex++;
+  if(lessonIndex<lesson.notes.length){
+    document.getElementById('lesson-instruction').textContent = `Play: ${lesson.notes[lessonIndex]}`;
+  } else {
+    alert('Lesson complete!');
+  }
+};
 
-// ----------------- Pages -----------------
-function showPage(pageId){ document.querySelectorAll("main section").forEach(sec=>sec.classList.add("hidden")); document.getElementById(pageId).classList.remove("hidden");}
-
-// ----------------- Audio -----------------
-async function initAudio(){ if(!audioContext){ audioContext=new (window.AudioContext||window.webkitAudioContext)(); const stream=await navigator.mediaDevices.getUserMedia({audio:true}); mediaStreamSource=audioContext.createMediaStreamSource(stream); analyser=audioContext.createAnalyser(); analyser.fftSize=2048; dataArray=new Float32Array(analyser.fftSize); mediaStreamSource.connect(analyser); }}
-
-// ----------------- Pitch Detection -----------------
-function detectPitch(){ analyser.getFloatTimeDomainData(dataArray); let SIZE=dataArray.length; let rms=0; for(let i=0;i<SIZE;i++) rms+=dataArray[i]*dataArray[i]; rms=Math.sqrt(rms/SIZE); if(rms<0.01) return null; let r=new Array(SIZE).fill(0); for(let lag=0;lag<SIZE;lag++){for(let i=0;i<SIZE-lag;i++) r[lag]+=dataArray[i]*dataArray[i+lag];} let d=0; while(r[d]>r[d+1]) d++; let maxval=-1,maxpos=-1; for(let i=d;i<SIZE;i++){if(r[i]>maxval){maxval=r[i]; maxpos=i;}} let T=maxpos; let freq=audioContext.sampleRate/T; return frequencyToNote(freq);}
-function frequencyToNote(freq){ if(!freq) return null; let minDiff=Infinity,closestNote=null; noteFrequencies.forEach(n=>{ let diff=Math.abs(n.freq-freq); if(diff<minDiff){ minDiff=diff; closestNote=n.note;}}); return closestNote;}
-
-// ----------------- Calibration -----------------
-async function startCalibration(){ if(!track){ alert("Select a track first."); return;} currentKeyIndex=0; calibrationData=[]; showPage("calibration-page"); await initAudio(); nextCalibrationStep();}
-function nextCalibrationStep(){ if(currentKeyIndex>=noteFrequencies.length){ keyboardMap=calibrationData; localStorage.setItem("keyboardMap",JSON.stringify(keyboardMap)); alert("Calibration complete!"); document.getElementById("lessons-btn").disabled=false; document.getElementById("songs-btn").disabled=false; showPage("home-page"); createPiano(); cancelAnimationFrame(rafId); return;} document.getElementById("calibration-instruction").textContent=`Play key ${noteFrequencies[currentKeyIndex].note} and click Continue.`; document.getElementById("progress-inner").style.width=`${Math.floor((currentKeyIndex/noteFrequencies.length)*100)}%`;}
-
-// ----------------- Lesson Handling -----------------
-function showLesson(){ const lessonList=lessons.filter(l=>l.track===track); if(lessonIndex>=lessonList.length){alert("All lessons completed!"); return;} const lesson=lessonList[lessonIndex]; document.getElementById("lesson-content").innerHTML=`<h3 class="font-bold text-lg">${lesson.title}</h3><p>${lesson.description}</p><p>Play the first note: ${lesson.expectedNotes[0]}</p>`; currentExpectedNotes=lesson.expectedNotes; currentNoteIndex=0; listenForLessonNotes();}
-function listenForLessonNotes(){ rafId=requestAnimationFrame(listenForLessonNotes); const detected=detectPitch(); if(detected && detected===currentExpectedNotes[currentNoteIndex]){ currentNoteIndex++; document.getElementById("lesson-progress-inner").style.width=`${Math.floor((currentNoteIndex/currentExpectedNotes.length)*100)}%`; if(currentNoteIndex>=currentExpectedNotes.length){ cancelAnimationFrame(rafId); alert("Lesson completed!"); lessonIndex++; showLesson(); return;} else {document.getElementById("lesson-content").innerHTML=`<h3 class="font-bold text-lg">${lessons.filter(l=>l.track===track)[lessonIndex].title}</h3><p>Play next note: ${currentExpectedNotes[currentNoteIndex]}</p>`;}}}
-
-// ----------------- Songs Handling -----------------
-function showSongs(){ const songListDiv=document.getElementById("song-list"); songListDiv.innerHTML=""; songs.forEach((song,i)=>{ const btn=document.createElement("button"); btn.textContent=`${song.title} - ${song.artist}`; btn.className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 w-full text-left"; btn.onclick=()=>playSong(song); songListDiv.appendChild(btn);});}
-function playSong(song){ const playbackDiv=document.getElementById("song-playback"); playbackDiv.innerHTML=`<p>Play the first note: ${song.notes[0]}</p>`; currentExpectedNotes=song.notes; currentNoteIndex=0; rafId=requestAnimationFrame(function songLoop(){ const detected=detectPitch(); if(detected && detected===currentExpectedNotes[currentNoteIndex]){ currentNoteIndex++; if(currentNoteIndex>=currentExpectedNotes.length){ playbackDiv.innerHTML=`<p>Song completed!</p>`; cancelAnimationFrame(rafId); return;} else {playbackDiv.innerHTML=`<p>Play next note: ${currentExpectedNotes[currentNoteIndex]}</p>`;}} rafId=requestAnimationFrame(songLoop);});}
-
-// ----------------- Piano -----------------
-function createPiano(){ const pianoDiv=document.getElementById("piano"); pianoDiv.innerHTML=""; if(!keyboardMap.length) return; keyboardMap.forEach(note=>{ const keyDiv=document.createElement("div"); keyDiv.textContent=note; keyDiv.className="key white"; pianoDiv.appendChild(keyDiv);});}
-
-// ----------------- Event Listeners -----------------
-document.getElementById("hands-on-btn").onclick=()=>{track="hands-on"; alert("Hands-On Track selected");};
-document.getElementById("mixed-btn").onclick=()=>{track="mixed"; alert("Mixed Track selected");};
-document.getElementById("calibrate-btn").onclick=startCalibration;
-document.getElementById("continue-calibration").onclick=()=>{ const detectedNote=detectPitch(); if(detectedNote){ calibrationData.push(detectedNote); currentKeyIndex++; nextCalibrationStep();} else { alert("No note detected. Please play the key clearly.");}};
-document.getElementById("lessons-btn").onclick=()=>{lessonIndex=0; showLesson(); showPage("lessons-page");};
-document.getElementById("songs-btn").onclick=()=>{showSongs(); showPage("songs-page");};
-document.getElementById("recalibrate-btn").onclick=()=>{localStorage.removeItem("keyboardMap"); location.reload();};
-document.getElementById("theme-toggle").onclick=()=>{ document.body.classList.toggle("bg-gray-900"); document.body.classList.toggle("text-white"); theme=theme==='light'?'dark':'light';};
-
-// ----------------- Load Progress -----------------
-const saved=localStorage.getItem("keyboardMap");
-if(saved){ keyboardMap=JSON.parse(saved); document.getElementById("lessons-btn").disabled=false; document.getElementById("songs-btn").disabled=false; createPiano();}
+// ----------- Song Library Setup -----------
+const songs = [
+{name:'Song 1', notes:['C4','D4','E4']},
+{name:'Song 2', notes:['E4','F4','G4']}
+];
+document.getElementById('start-songs').onclick = ()=>{
+  document.getElementById('song-area').style.display='flex';
+  renderSongs();
+};
+function renderSongs(){
+  const container = document.getElementById('song-list');
+  container.innerHTML='';
+  songs.forEach(song=>{
+    const div = document.createElement('div');
+    div.textContent=song.name;
+    div.style.cursor='pointer';
+    div.style.padding='5px';
+    div.style.border='1px solid #ccc';
+    div.style.margin='3px';
+    div.onclick = ()=>{alert(`Play song: ${song.name}`)};
+    container.appendChild(div);
+  });
+}
 </script>
 </body>
 </html>
