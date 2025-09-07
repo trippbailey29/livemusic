@@ -3,187 +3,206 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Piano Learning App</title>
+<title>Ultimate Piano Learning App</title>
 <style>
-  body { font-family: 'Arial', sans-serif; margin:0; background:#f0f0f0; }
-  .dark { background:#1e1e1e; color:white; }
-  header { display:flex; justify-content:space-between; align-items:center; padding:1rem; background:#333; color:white; }
-  header h1 { margin:0; font-size:1.5rem; }
-  #theme-toggle { cursor:pointer; padding:.5rem 1rem; background:#555; border:none; color:white; border-radius:5px; }
-  main { padding:1rem; display:flex; flex-direction:column; gap:1rem; }
-  .card { background:white; padding:1rem; border-radius:10px; box-shadow:0 4px 6px rgba(0,0,0,0.1); }
-  .dark .card { background:#2a2a2a; }
-  #piano { display:flex; overflow-x:auto; user-select:none; margin-top:1rem; }
-  .white { width:40px; height:150px; border:1px solid black; background:white; position:relative; margin-right:-1px; z-index:1; display:flex; justify-content:center; align-items:flex-end; font-size:10px; cursor:pointer; }
-  .white.highlight { background:yellow; }
-  .white.correct { background:green; color:white; }
-  .white.wrong { background:red; color:white; }
-  .black { width:25px; height:100px; background:black; position:relative; margin-right:-12px; z-index:2; display:flex; justify-content:center; align-items:flex-end; font-size:9px; color:white; cursor:pointer; }
-  #progress-container { height:20px; background:#ccc; border-radius:10px; overflow:hidden; margin-top:.5rem; }
-  #progress { height:100%; width:0%; background:green; transition:width .3s; }
-  #lesson-area, #song-area { display:none; flex-direction:column; gap:.5rem; }
-  button { padding:.5rem 1rem; border:none; border-radius:5px; cursor:pointer; }
+/* ======================== General Styles ======================== */
+body{margin:0;font-family:'Arial',sans-serif;background:#f0f0f0;color:#111;transition:background .3s,color .3s}
+.dark{background:#1e1e1e;color:white}
+header{display:flex;justify-content:space-between;align-items:center;padding:1rem;background:#333;color:white;box-shadow:0 4px 10px rgba(0,0,0,.2)}
+header h1{margin:0;font-size:1.5rem}
+#theme-toggle{cursor:pointer;padding:.5rem 1rem;background:#555;border:none;color:white;border-radius:5px;transition:background .3s}
+#theme-toggle:hover{background:#777}
+main{padding:1rem;display:grid;grid-template-columns:1fr;gap:1rem}
+@media(min-width:900px){main{grid-template-columns:1fr 1fr;}}
+.card{background:white;padding:1rem;border-radius:15px;box-shadow:0 4px 10px rgba(0,0,0,.2);transition:transform .3s;}
+.dark .card{background:#2a2a2a;}
+.card:hover{transform:translateY(-3px);}
+button{padding:.5rem 1rem;border:none;border-radius:5px;cursor:pointer;transition:background .3s}
+button:hover{background:#ddd}
+/* ======================== Piano Styles ======================== */
+#piano{display:flex;overflow-x:auto;user-select:none;margin-top:1rem;padding-bottom:1rem}
+.white{width:40px;height:160px;border:1px solid black;background:white;margin-right:-1px;position:relative;display:flex;justify-content:center;align-items:flex-end;font-size:10px;cursor:pointer;border-radius:5px;transition:background .3s}
+.white.highlight{background:yellow}
+.white.correct{background:green;color:white}
+.white.wrong{background:red;color:white}
+.black{width:25px;height:100px;background:black;position:relative;margin-right:-12px;display:flex;justify-content:center;align-items:flex-end;font-size:9px;color:white;cursor:pointer;border-radius:3px;z-index:2;transition:background .3s}
+.black.highlight{background:gold}
+.black.correct{background:green;color:white}
+.black.wrong{background:red;color:white}
+/* ======================== Progress & Cards ======================== */
+#progress-container{height:20px;background:#ccc;border-radius:10px;overflow:hidden;margin-top:.5rem}
+#progress{height:100%;width:0%;background:green;transition:width .3s}
+#lesson-area,#song-area{display:none;flex-direction:column;gap:.5rem}
+#song-list{display:flex;flex-wrap:wrap;gap:.5rem;max-height:200px;overflow-y:auto}
+.song-card{padding:.5rem 1rem;border-radius:10px;background:#eee;cursor:pointer;flex:1 1 calc(50% - 10px);transition:transform .2s,background .2s}
+.dark .song-card{background:#444;color:white}
+.song-card:hover{transform:scale(1.05);background:#ddd}
+.dark .song-card:hover{background:#555}
 </style>
 </head>
 <body>
 <header>
-  <h1>Piano Learning App</h1>
-  <button id="theme-toggle">Toggle Theme</button>
+<h1>Ultimate Piano Learning App</h1>
+<button id="theme-toggle">Toggle Theme</button>
 </header>
 <main>
-  <div id="calibration-card" class="card">
-    <h2>Calibration</h2>
-    <p id="calibration-instruction">Press the highlighted key on your piano.</p>
-    <div id="piano"></div>
-    <div id="progress-container"><div id="progress"></div></div>
-    <button id="next-key">Continue</button>
-  </div>
+<div id="calibration-card" class="card">
+<h2>Calibration</h2>
+<p id="calibration-instruction">Press the highlighted key on your piano to begin calibration.</p>
+<div id="piano"></div>
+<div id="progress-container"><div id="progress"></div></div>
+</div>
 
-  <div id="lesson-card" class="card">
-    <h2>Lessons</h2>
-    <div id="lesson-area">
-      <p id="lesson-instruction"></p>
-      <button id="next-lesson">Next Note</button>
-    </div>
-    <button id="start-lessons">Start Lessons</button>
-  </div>
+<div id="lesson-card" class="card">
+<h2>Lessons</h2>
+<div id="lesson-area">
+<p id="lesson-instruction"></p>
+<button id="next-lesson">Next Note</button>
+</div>
+<button id="start-lessons">Start Lessons</button>
+</div>
 
-  <div id="song-card" class="card">
-    <h2>Song Library</h2>
-    <div id="song-area">
-      <input type="text" id="song-search" placeholder="Search songs">
-      <div id="song-list"></div>
-    </div>
-    <button id="start-songs">Show Songs</button>
-  </div>
+<div id="song-card" class="card">
+<h2>Song Library</h2>
+<div id="song-area">
+<input type="text" id="song-search" placeholder="Search songs">
+<div id="song-list"></div>
+</div>
+<button id="start-songs">Show Songs</button>
+</div>
 </main>
 
 <script>
-// ----------- Piano Keys -----------
-const NOTES = [
-'A0','A#0','B0','C1','C#1','D1','D#1','E1','F1','F#1','G1','G#1','G#1',
-'C2','C#2','D2','D#2','E2','F2','F#2','G2','G#2',
-'C3','C#3','D3','D#3','E3','F3','F#3','G3','G#3',
-'C4','C#4','D4','D#4','E4','F4','F#4','G4','G#4',
-'C5','C#5','D5','D#5','E5','F5','F#5','G5','G#5',
-'C6','C#6','D6','D#6','E6','F6','F#6','G6','G#6',
-'C7','C#7','D7','D#7','E7','F7','F#7','G7','G#7',
-'C8'
+// ======================== Piano Notes & Variables ========================
+const NOTES=[
+'A0','A#0','B0','C1','C#1','D1','D#1','E1','F1','F#1','G1','G#1',
+'A1','A#1','B1','C2','C#2','D2','D#2','E2','F2','F#2','G2','G#2',
+'A2','A#2','B2','C3','C#3','D3','D#3','E3','F3','F#3','G3','G#3',
+'A3','A#3','B3','C4','C#4','D4','D#4','E4','F4','F#4','G4','G#4',
+'A4','A#4','B4','C5','C#5','D5','D#5','E5','F5','F#5','G5','G#5',
+'A5','A#5','B5','C6','C#6','D6','D#6','E6','F6','F#6','G6','G#6',
+'A6','A#6','B6','C7','C#7','D7','D#7','E7','F7','F#7','G7','G#7',
+'A7','A#7','B7','C8'
 ];
-let currentCalibrationIndex = 0;
-let calibratedNotes = [];
-let lessonIndex = 0;
-let theme = 'light';
+let currentCalibrationIndex=0, calibratedNotes=[], lessonIndex=0, theme='light';
 
-// ----------- Build Piano Visual -----------
-const pianoContainer = document.getElementById('piano');
-function createPiano() {
+// ======================== Build Piano ========================
+const pianoContainer=document.getElementById('piano');
+function createPiano(){
   pianoContainer.innerHTML='';
-  NOTES.forEach((note,i)=>{
-    const isBlack = note.includes('#');
-    const key = document.createElement('div');
-    key.className = isBlack?'black':'white';
-    key.textContent = note;
-    key.dataset.note = note;
+  NOTES.forEach(note=>{
+    const key=document.createElement('div');
+    key.className=note.includes('#')?'black':'white';
+    key.textContent=note;
+    key.dataset.note=note;
     pianoContainer.appendChild(key);
   });
 }
 createPiano();
 
-// ----------- Highlight Key for Calibration -----------
-function highlightKey(index) {
-  const keys = pianoContainer.querySelectorAll('.white, .black');
+// ======================== Highlight Keys ========================
+function highlightKey(index){
+  const keys=pianoContainer.querySelectorAll('.white,.black');
   keys.forEach(k=>k.classList.remove('highlight','correct','wrong'));
   if(index<keys.length){
     keys[index].classList.add('highlight');
-    document.getElementById('calibration-instruction').textContent = `Play: ${NOTES[index]}`;
-    const progressPercent = ((index)/NOTES.length)*100;
-    document.getElementById('progress').style.width = progressPercent+'%';
+    document.getElementById('calibration-instruction').textContent=`Play: ${NOTES[index]}`;
+    document.getElementById('progress').style.width=((index)/NOTES.length*100)+'%';
   }
 }
 highlightKey(currentCalibrationIndex);
 
-// ----------- Mock Pitch Detection (replace with real mic logic) -----------
-function detectPitchMock() {
-  // Random correct or wrong for demo
-  return NOTES[currentCalibrationIndex]; // for demo, always correct
-}
-
-// ----------- Calibration Logic -----------
-document.getElementById('next-key').onclick = ()=>{
-  const detected = detectPitchMock();
-  const keys = pianoContainer.querySelectorAll('.white, .black');
-  const currentKey = keys[currentCalibrationIndex];
-  if(detected===NOTES[currentCalibrationIndex]){
-    currentKey.classList.add('correct');
-    calibratedNotes.push(detected);
-    currentCalibrationIndex++;
-    if(currentCalibrationIndex<NOTES.length){
-      highlightKey(currentCalibrationIndex);
-    } else {
-      alert('Calibration complete!');
-      document.getElementById('calibration-card').style.display='none';
-    }
-  } else {
-    currentKey.classList.add('wrong');
-    alert('Wrong note, try again.');
-  }
-};
-
-// ----------- Theme Toggle -----------
-document.getElementById('theme-toggle').onclick = ()=>{
+// ======================== Theme Toggle ========================
+document.getElementById('theme-toggle').onclick=()=>{
   document.body.classList.toggle('dark');
-  theme = theme==='light'?'dark':'light';
+  theme=theme==='light'?'dark':'light';
 };
 
-// ----------- Lessons Setup -----------
-const lessons = [
-{title:'Lesson 1', notes:['C4','D4','E4','F4']},
-{title:'Lesson 2', notes:['E4','F4','G4','A4']},
-{title:'Lesson 3', notes:['C4','E4','G4']}
-// ... add up to 20 lessons
+// ======================== Lessons ========================
+const lessons=[
+{title:'Lesson 1',notes:['C4','D4','E4','F4']},{title:'Lesson 2',notes:['E4','F4','G4','A4']},
+{title:'Lesson 3',notes:['C4','E4','G4']},{title:'Lesson 4',notes:['C4','D4','E4','F4','G4']},
+{title:'Lesson 5',notes:['G4','F4','E4','D4','C4']},{title:'Lesson 6',notes:['C3','E3','G3']},
+{title:'Lesson 7',notes:['A3','C4','E4']},{title:'Lesson 8',notes:['F3','A3','C4']},
+{title:'Lesson 9',notes:['D3','F3','A3']},{title:'Lesson10',notes:['G3','B3','D4']},
+{title:'Lesson11',notes:['C4','F4','G4']},{title:'Lesson12',notes:['D4','G4','A4']},
+{title:'Lesson13',notes:['E4','A4','B4']},{title:'Lesson14',notes:['F4','B4','C5']},
+{title:'Lesson15',notes:['G4','C5','D5']},{title:'Lesson16',notes:['A4','D5','E5']},
+{title:'Lesson17',notes:['B4','E5','F5']},{title:'Lesson18',notes:['C5','F5','G5']},
+{title:'Lesson19',notes:['D5','G5','A5']},{title:'Lesson20',notes:['E5','A5','B5']}
 ];
-document.getElementById('start-lessons').onclick = ()=>{
-  document.getElementById('lesson-area').style.display='flex';
-  showLesson(0);
-};
-function showLesson(idx){
-  lessonIndex=0;
-  document.getElementById('lesson-instruction').textContent = `${lessons[idx].title}: Play ${lessons[idx].notes[lessonIndex]}`;
-}
-document.getElementById('next-lesson').onclick = ()=>{
-  const lesson = lessons[0]; // For demo, using first lesson
+document.getElementById('start-lessons').onclick=()=>{document.getElementById('lesson-area').style.display='flex';showLesson(0);}
+function showLesson(idx){lessonIndex=0;document.getElementById('lesson-instruction').textContent=`${lessons[idx].title}: Play ${lessons[idx].notes[lessonIndex]}`;}
+document.getElementById('next-lesson').onclick=()=>{
+  const lesson=lessons[0]; // For simplicity, start with lesson 0
   lessonIndex++;
-  if(lessonIndex<lesson.notes.length){
-    document.getElementById('lesson-instruction').textContent = `Play: ${lesson.notes[lessonIndex]}`;
-  } else {
-    alert('Lesson complete!');
-  }
+  if(lessonIndex<lesson.notes.length){document.getElementById('lesson-instruction').textContent=`Play: ${lesson.notes[lessonIndex]}`;}
+  else{alert('Lesson complete!');}
 };
 
-// ----------- Song Library Setup -----------
-const songs = [
-{name:'Song 1', notes:['C4','D4','E4']},
-{name:'Song 2', notes:['E4','F4','G4']}
+// ======================== Song Library ========================
+const songs=[
+{name:'Twinkle',notes:['C4','C4','G4','G4','A4','A4','G4']},
+{name:'MaryHadALittleLamb',notes:['E4','D4','C4','D4','E4','E4','E4']},
+{name:'OdeToJoy',notes:['E4','E4','F4','G4','G4','F4','E4','D4']}
 ];
-document.getElementById('start-songs').onclick = ()=>{
-  document.getElementById('song-area').style.display='flex';
-  renderSongs();
-};
+document.getElementById('start-songs').onclick=()=>{document.getElementById('song-area').style.display='flex';renderSongs();}
 function renderSongs(){
-  const container = document.getElementById('song-list');
-  container.innerHTML='';
+  const container=document.getElementById('song-list'); container.innerHTML='';
   songs.forEach(song=>{
-    const div = document.createElement('div');
-    div.textContent=song.name;
-    div.style.cursor='pointer';
-    div.style.padding='5px';
-    div.style.border='1px solid #ccc';
-    div.style.margin='3px';
-    div.onclick = ()=>{alert(`Play song: ${song.name}`)};
+    const div=document.createElement('div'); div.className='song-card'; div.textContent=song.name;
+    div.onclick=()=>{alert(`Play song: ${song.name}`)};
     container.appendChild(div);
   });
 }
+
+// ======================== Microphone & Pitch Detection ========================
+let audioContext=null,analyser=null,dataArray=null,source=null;
+async function initMic(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    audioContext=new AudioContext();
+    source=audioContext.createMediaStreamSource(stream);
+    analyser=audioContext.createAnalyser();
+    source.connect(analyser);
+    analyser.fftSize=2048;
+    dataArray=new Float32Array(analyser.frequencyBinCount);
+    detectPitchLoop();
+  }catch(err){alert("Microphone access required!");}
+}
+function detectPitchLoop(){
+  analyser.getFloatTimeDomainData(dataArray);
+  let freq=autoCorrelate(dataArray,audioContext.sampleRate);
+  if(freq && currentCalibrationIndex<NOTES.length){
+    const note=frequencyToNote(freq);
+    const currentNote=NOTES[currentCalibrationIndex];
+    if(note===currentNote){
+      calibratedNotes.push(note);
+      const keys=pianoContainer.querySelectorAll('.white,.black');
+      keys[currentCalibrationIndex].classList.add('correct');
+      currentCalibrationIndex++;
+      if(currentCalibrationIndex<NOTES.length) highlightKey(currentCalibrationIndex);
+      else alert('Calibration complete!');
+    }
+  }
+  requestAnimationFrame(detectPitchLoop);
+}
+function frequencyToNote(freq){
+  const A4=440;
+  const noteNum=12*(Math.log2(freq/A4))+69;
+  return NOTES[Math.round(noteNum)]||null;
+}
+function autoCorrelate(buf,sampleRate){
+  let SIZE=buf.length,rms=0;
+  for(let i=0;i<SIZE;i++)rms+=buf[i]*buf[i];
+  rms=Math.sqrt(rms/SIZE);
+  if(rms<0.01) return null;
+  let r=[];for(let i=0;i<SIZE;i++){r[i]=0;for(let j=0;j<SIZE-i;j++){r[i]+=buf[j]*buf[j+i];}}
+  let d=0;while(r[d]>r[d+1])d++;
+  let maxval=-1,maxpos=-1;for(let i=d;i<SIZE;i++){if(r[i]>maxval){maxval=r[i];maxpos=i;}}
+  return sampleRate/maxpos;
+}
+initMic();
 </script>
 </body>
 </html>
